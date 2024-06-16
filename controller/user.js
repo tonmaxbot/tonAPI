@@ -1,71 +1,100 @@
 const User = require('../model/user');
+const addReferral = require("../util/main")
 
-
-exports.register = async (req, res) => {
-  const { telegramId, username, walletAddress } = req.body;
-
-  // Validate telegramId and username
-  if (!telegramId || !username || !walletAddress) {
-    return res.status(400).json({ message: 'Missing required fields' });
-  }
-
+exports.registerUser = async (req, res) => {
+  const { username, walletAddress, upline, balance } = req.body;
+ const uplinerArray = []
+ const adminUpliner = []
+ const nonAdminUpliner = []
   try {
-    const existingUser = await User.findOne({ telegramId });
+    // Check for existing user (optional, based on your requirements)
+    const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(409).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'Username already taken' });
     }
+   
+ 
+ 
 
-    const user = new User({ telegramId, username,walletAddress });
-    await user.save();
+    // Create new user document
+    const newUser = new User({
+      username,
+      walletAddress,
+      upline, // Assuming upline is already validated (see note below)
+     
+    });
 
-    const token = await user.generateAuthToken();
-    return res.status(201).json({ message: 'User created successfully', token });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Server error' });
+
+    if(upline == "Admin"){
+      newUser.uplinerTree.push({ userId: newUser._id });
+    }else{
+      const referralUser = await User.findOne({ username : upline });
+      if (!referralUser) {
+        return res.status(400).json({ message: 'Referral Link is wrong' });
+      }
+      // Extract the uplinerTree from the referral user and add new user's ID
+      const newUplinerTree = [...referralUser.uplinerTree, { userId: newUser._id }];
+      newUser.uplinerTree = newUplinerTree;
+    }
+   
+    await newUser.save(); // Save user document to database
+ 
+    if(newUser.uplinerTree.length > 1){
+      addReferral(newUser.uplinerTree);
+    }
+    
+
+    const token = await newUser.generateAuthToken();
+    return res.status(201).json({ message: 'User registered successfully',token });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Error registering user' });
   }
 };
 
-exports.login = async (req, res) => {
-  const { telegramId} = req.body;
-
-  // Validate telegramId and username
-  if (!telegramId) {
-    return res.status(400).json({ message: 'Missing required fields' });
-  }
+exports.loginUser = async (req, res) => {
+  const { username } = req.body;
 
   try {
-    const user = await User.findOne({ telegramId });
+    const user = await User.findOne({ username });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid username' });
     }
 
     const token = await user.generateAuthToken();
-    return res.status(200).json({ message: 'Login successful', token });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(200).json({ token });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Error logging in user' });
   }
 };
 
-exports.getUserByTelegramId = async (req, res) => {
-    const { telegramId } = req.body; // Assuming telegramId is passed in the URL path
-  
-    // Validate telegramId
-    if (!telegramId) {
-      return res.status(400).json({ message: 'Missing telegramId' });
+
+exports.getUserDetails = async (req, res) => {
+  try {
+    const userDetails = req.user; 
+    return res.status(200).json(userDetails);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Error fetching user details' });
+  }
+};
+
+
+
+exports.checkUsernameAvailability = async (req, res) => {
+  const { username } = req.body; 
+  try {
+    const existingUser = await User.findOne({ username }); 
+
+    if (existingUser) {
+      return res.status(200).json({ available : false });
     }
-  
-    try {
-      const user = await User.findOne({ telegramId });
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      return res.status(200).json(user); // You might want to filter sensitive data before sending the response
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Server error' });
-    }
-  };
-  
+
+    return res.status(200).json({ available : true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Error checking username availability' });
+  }
+};
+

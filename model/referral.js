@@ -7,7 +7,7 @@ const referralSchema = new mongoose.Schema({
   },
   referredByTelegramId: {
     type: String,
-    required: true,
+    required: true, 
   },
   referralTimestamp: {
     type: Date,
