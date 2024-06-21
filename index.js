@@ -3,7 +3,7 @@ const dotenv = require('dotenv').config();
 const app = express();
 const connectDb = require('./config/database');
 const user  = require("./routes/user")
-
+const Users = require("./model/user");
 const port = process.env.PORT || 3000;
 
 
@@ -24,7 +24,9 @@ app.use((req, res, next) => {
 });
 
 
-app.listen(port, () => {
+app.listen(port, async() => {
   connectDb();
   console.log(`Server listening on port ${port}`);
+  
+  
 });

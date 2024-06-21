@@ -4,25 +4,25 @@ const dotenv = require('dotenv').config();
 
 const auth = async (req, res, next) => {
   try {
-    const token = req.header('Authorization').replace('Bearer ', ''); // Extract token from header
+    const token = req.header('Authorization').replace('Bearer ', ''); 
 
     if (!token) {
-      return res.status(401).json({ message: 'No token provided' }); // Handle missing token
+      return res.status(401).json({ message: 'No token provided' });
     }
 
-    const decoded = jwt.verify(token, process.env.SECRETKEY); // Verify the token
-    const userId = decoded._id; // Extract user ID from payload
+    const decoded = jwt.verify(token, process.env.SECRETKEY); 
+    const userId = decoded._id;
 
-    const user = await User.findById(userId); // Find user by ID
+    const user = await User.findById(userId); 
 
     if (!user) {
-      throw new Error(); // Handle invalid token (user not found)
+      throw new Error(); 
     }
 
-    req.user = user; // Attach user object to the request
-    next(); // Continue processing the request
+    req.user = user; 
+    next(); 
   } catch (err) {
-    res.status(401).json({ message: 'Invalid token' }); // Unauthorized
+    res.status(401).json({ message: 'Invalid token' }); 
   }
 };
 

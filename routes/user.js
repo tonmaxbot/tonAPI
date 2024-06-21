@@ -10,6 +10,12 @@ router.post('/login', userController.loginUser);
 
 router.get("/getUser",auth,userController.getUserDetails)
 
+router.get("/getReferralTree",userController.getReferralTree)
+
+router.get("/findSlot",userController.findSlot)
+
+router.delete("/resetTable",userController.resetAndDropUsers)
+
 router.post("/getUserAvaliability",userController.checkUsernameAvailability)
 
 

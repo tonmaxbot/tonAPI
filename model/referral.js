@@ -11,7 +11,7 @@ const referralSchema = new mongoose.Schema({
   },
   referralTimestamp: {
     type: Date,
-    default: Date.now // Record the timestamp of the referral
+    default: Date.now 
   }
 });
 
