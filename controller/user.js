@@ -14,7 +14,12 @@ exports.registerUser = async (req, res) => {
     if (existingId) {
       return res.status(400).json({ message: 'Wallet address or Telegram ID already exists.' });
     }
-    
+
+    const existingAdmin01 = await User.findOne({ username: 'mainAdmin', upline: 'Admin' });
+if(!existingAdmin01 ){
+
+}else{
+  
  
   if(username === "Admin" || username === "mainAdmin"){
       return res.status(400).json({ message: "Username Cant be Admin" });
@@ -29,7 +34,7 @@ exports.registerUser = async (req, res) => {
     if (!existingUpline && upline !== "mainAdmin") {
       return res.status(400).json({ message: "Your upline must be valid user or your upline must be mainAdmin " });
     }
-
+  }
     // Create new user document
     const newUser = new User({
       username,
@@ -120,10 +125,10 @@ exports.findSlot = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
-  const { telegramId } = req.body;
+  const { walletAddress } = req.body;
 
   try {
-    const user = await User.findOne({ telegramId });
+    const user = await User.findOne({ walletAddress });
     if (!user) {
       return res.status(401).json({ message: "Invalid telegramId" });
     }

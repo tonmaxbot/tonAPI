@@ -1,27 +1,24 @@
 const express = require('express');
 const dotenv = require('dotenv').config();
+const cors = require('cors'); 
 const app = express();
 const connectDb = require('./config/database');
 const user  = require("./routes/user")
 const Users = require("./model/user");
 const port = process.env.PORT || 3000;
 
-
+app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/api/v1",user)
 
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-
-    if (req.method == 'OPTIONS') {
-        res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
-        return res.status(200).json({});
-    }
-    next();
-});
+// Middleware setup
+app.use(cors({
+  origin: '*', // Adjust this to your specific origin as needed
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
+}));
 
 
 app.listen(port, async() => {
