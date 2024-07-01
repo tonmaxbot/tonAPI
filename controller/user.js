@@ -3,45 +3,54 @@ const addReferral = require("../util/main");
 const getReferralTree = require("../util/referralTree");
 const findFirstEmptyDownline = require("../util/findSlot");
 
-
 exports.registerUser = async (req, res) => {
   const { username, telegramId, walletAddress, upline } = req.body;
   try {
+    const walletAddressExists = await User.findOne({ walletAddress });
+    const telegramIdExists = await User.findOne({ telegramId });
 
-    const existingId = await User.findOne({
-      $or: [{ walletAddress }, { telegramId }]
-    });
-    if (existingId) {
-      return res.status(400).json({ message: 'Wallet address or Telegram ID already exists.' });
+    if (walletAddressExists) {
+      return res
+        .status(400)
+        .json({ message: "Wallet address already exists." });
     }
 
-    const existingAdmin01 = await User.findOne({ username: 'mainAdmin', upline: 'Admin' });
-if(existingAdmin01 ){
+    if (telegramIdExists) {
+      return res.status(400).json({ message: "Telegram ID already exists." });
+    }
 
-  if(username === "Admin" || username === "mainAdmin"){
-    return res.status(400).json({ message: "Username Cant be Admin or admin already exists" });
-}
- 
-  const existingUser = await User.findOne({ username });
-  if (existingUser) {
-    return res.status(400).json({ message: "Username already taken" });
-  }
-  
-  const existingUpline = await User.findOne({ upline });
-  if (!existingUpline && upline !== "mainAdmin") {
-    return res.status(400).json({ message: "Your upline must be valid user or your upline must be mainAdmin " });
-  }
-}else{
-  
- 
-  }
+    const existingAdmin01 = await User.findOne({
+      username: "mainAdmin",
+      upline: "Admin",
+    });
+    if (existingAdmin01) {
+      if (username === "Admin" || username === "mainAdmin") {
+        return res
+          .status(400)
+          .json({ message: "Username Cant be Admin or admin already exists" });
+      }
+
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+
+      const existingUpline = await User.findOne({ upline });
+      if (!existingUpline && upline !== "mainAdmin") {
+        return res.status(400).json({
+          message:
+            "Your upline must be valid user or your upline must be mainAdmin ",
+        });
+      }
+    } else {
+    }
     // Create new user document
     const newUser = new User({
       username,
       walletAddress,
       telegramId,
       upline, // Assuming upline is already validated (see note below)
-      invited_by:upline
+      invited_by: upline,
     });
 
     if (upline === "Admin") {
@@ -51,16 +60,23 @@ if(existingAdmin01 ){
       if (!referralUser) {
         return res.status(400).json({ message: "Referral Link is wrong" });
       }
-      if (referralUser.downliner1 !== "Empty" && referralUser.downliner2 !== "Empty") {
+      if (
+        referralUser.downliner1 !== "Empty" &&
+        referralUser.downliner2 !== "Empty"
+      ) {
         let finalResult = await findFirstEmptyDownline(upline);
 
         if (!finalResult) {
-          return res.status(400).json({ message: "No available downline found" });
+          return res
+            .status(400)
+            .json({ message: "No available downline found" });
         }
 
         newUser.upline = finalResult.upline;
 
-        const overflowUser = await User.findOne({ username: finalResult.upline });
+        const overflowUser = await User.findOne({
+          username: finalResult.upline,
+        });
         if (!overflowUser) {
           return res.status(400).json({ message: "Overflow Link is wrong" });
         }
@@ -73,7 +89,10 @@ if(existingAdmin01 ){
 
         await overflowUser.save();
 
-        newUser.uplinerTree = [...overflowUser.uplinerTree, { userId: newUser._id }];
+        newUser.uplinerTree = [
+          ...overflowUser.uplinerTree,
+          { userId: newUser._id },
+        ];
       } else {
         if (referralUser.downliner1 === "Empty") {
           referralUser.downliner1 = newUser.username;
@@ -83,7 +102,10 @@ if(existingAdmin01 ){
 
         await referralUser.save();
 
-        newUser.uplinerTree = [...referralUser.uplinerTree, { userId: newUser._id }];
+        newUser.uplinerTree = [
+          ...referralUser.uplinerTree,
+          { userId: newUser._id },
+        ];
       }
     }
 
@@ -162,7 +184,7 @@ exports.getReferralTree = async (req, res) => {
   }
 };
 
-exports.resetAndDropUsers = async (req,res) => {
+exports.resetAndDropUsers = async (req, res) => {
   try {
     // Find users with upline as "Admin"
     const adminUplineUsers = await User.find({ upline: "Admin" });
@@ -180,25 +202,16 @@ exports.resetAndDropUsers = async (req,res) => {
 
     // Delete all other users
     await User.deleteMany({ upline: { $ne: "Admin" } });
-    return res.status(500).json({ message: "Users reset and others deleted successfully." });
-
-   
+    return res
+      .status(500)
+      .json({ message: "Users reset and others deleted successfully." });
   } catch (error) {
     console.error("Error in resetting and deleting users:", error);
-    return res.status(500).json({ message: "Error in resetting and deleting users" });
-
-   
+    return res
+      .status(500)
+      .json({ message: "Error in resetting and deleting users" });
   }
 };
-
-
-
-
-
-
-
-
-
 
 exports.checkUsernameAvailability = async (req, res) => {
   const { username } = req.body;
