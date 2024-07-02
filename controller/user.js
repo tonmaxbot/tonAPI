@@ -37,12 +37,10 @@ exports.registerUser = async (req, res) => {
 
       const existingUpline = await User.findOne({ upline });
       if (!existingUpline && upline !== "mainAdmin") {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Your upline must be valid user or your upline must be mainAdmin ",
-          });
+        return res.status(400).json({
+          message:
+            "Your upline must be valid user or your upline must be mainAdmin ",
+        });
       }
     } else {
     }
