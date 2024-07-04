@@ -16,24 +16,28 @@ exports.registerUser = async (req, res) => {
     }
 
     const existingAdmin01 = await User.findOne({ username: 'mainAdmin', upline: 'Admin' });
-if(existingAdmin01 ){
+if(!existingAdmin01){
 
-  if(username === "Admin" || username === "mainAdmin"){
-    return res.status(400).json({ message: "Username Cant be Admin or admin already exists" });
+  if(username != "mainAdmin" && upline != "Admin"){
+    return res.status(400).json({ message: "The first user must have a username named mainAdmin and the upline named Admin " });
 }
  
-  const existingUser = await User.findOne({ username });
-  if (existingUser) {
-    return res.status(400).json({ message: "Username already taken" });
-  }
-  
-  const existingUpline = await User.findOne({ upline });
-  if (!existingUpline && upline !== "mainAdmin") {
-    return res.status(400).json({ message: "Your upline must be valid user or your upline must be mainAdmin " });
-  }
 }else{
   
  
+  if(username === "Admin" || username === "mainAdmin"){
+      return res.status(400).json({ message: "Username Cant be Admin" });
+  }
+   
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already taken" });
+    }
+    
+    const existingUpline = await User.findOne({ upline });
+    if (!existingUpline && upline !== "mainAdmin") {
+      return res.status(400).json({ message: "Your upline must be valid user or your upline must be mainAdmin " });
+    }
   }
     // Create new user document
     const newUser = new User({
