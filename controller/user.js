@@ -126,6 +126,23 @@ exports.registerUser = async (req, res) => {
   }
 };
 
+exports.validateUserWallet = async (req, res) => {
+  const {  walletAddress } = req.body;
+  try {
+    const walletAddressExists = await User.findOne({ walletAddress });
+
+    if (walletAddressExists) {
+      return res
+        .status(200)
+        .json({ message: "Wallet address  exists." });
+    }
+    return res.status(400).json({ message: "Wallet address doesn't exists." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Error registering user" });
+  }
+};
+
 exports.findSlot = async (req, res) => {
   const { rootUsername } = req.body;
 
