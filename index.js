@@ -23,7 +23,7 @@ app.use(cors({
 
 app.listen(port, async() => {
   connectDb();
-  console.log(`Server listening on port ${port}`);
+  console.log(`The server is listening on port ${port}`);
   
   
 });
